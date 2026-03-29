@@ -1,0 +1,52 @@
+name: NeuroVault CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests & Lint
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:7.0
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+        
+      - name: Run Lint
+        run: npm run lint
+        
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+        
+      - name: Run E2E Tests
+        run: npx playwright test
+        env:
+          MONGODB_URI: mongodb://localhost:27017/test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
