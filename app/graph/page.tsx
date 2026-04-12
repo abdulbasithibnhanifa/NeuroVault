@@ -69,7 +69,7 @@ export default function GraphPage() {
             </svg>
           </div>
           <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Omni-Vault View</h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">Includes both your private documents and collaborators' shared materials seamlessly.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">Includes both your private documents and collaborators&apos; shared materials seamlessly.</p>
         </div>
 
         <div className="bg-white dark:bg-gray-900 p-8 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-xl group">

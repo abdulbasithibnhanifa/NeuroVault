@@ -158,7 +158,7 @@ export default function DashboardPage() {
           <div className="mt-12 p-6 bg-white/10 backdrop-blur-md rounded-3xl border border-white/10 relative">
             <h4 className="font-black text-[10px] uppercase tracking-[0.2em] mb-2 opacity-60">AI Tip</h4>
             <p className="text-xs font-medium leading-relaxed opacity-90 italic">
-              "Try asking complex relationships in the Chat. Your knowledge graph is now fully mapped to your semantic indices."
+              &quot;Try asking complex relationships in the Chat. Your knowledge graph is now fully mapped to your semantic indices.&quot;
             </p>
           </div>
         </div>

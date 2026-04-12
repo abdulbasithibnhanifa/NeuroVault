@@ -24,13 +24,13 @@ export default function DocumentList({ searchTerm, filters }: DocumentListProps)
   const [previewContent, setPreviewContent] = useState<string>('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const buildUrl = (baseUrl: string) => {
+  const buildUrl = React.useCallback((baseUrl: string) => {
     const params = new URLSearchParams();
     if (searchTerm) params.append('search', searchTerm);
     if (filters?.type) params.append('type', filters.type);
     if (filters?.tags && filters.tags.length > 0) params.append('tags', filters.tags.join(','));
     return `${baseUrl}?${params.toString()}`;
-  };
+  }, [searchTerm, filters?.type, filters?.tags]);
 
   const fetchDocumentContent = async (id: string) => {
     try {
@@ -78,7 +78,7 @@ export default function DocumentList({ searchTerm, filters }: DocumentListProps)
     }, 3000);
 
     return () => clearInterval(intervalId);
-  }, [documents, searchTerm, filters?.type, JSON.stringify(filters?.tags)]);
+  }, [documents, buildUrl]);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -98,7 +98,7 @@ export default function DocumentList({ searchTerm, filters }: DocumentListProps)
     };
 
     fetchDocuments();
-  }, [searchTerm, filters?.type, JSON.stringify(filters?.tags)]);
+  }, [buildUrl]);
 
   const handleDelete = async (id: string) => {
     try {

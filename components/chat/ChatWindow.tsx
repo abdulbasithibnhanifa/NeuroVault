@@ -347,7 +347,7 @@ const ChatWindow: React.FC = () => {
             <div className="animate-in slide-in-from-bottom duration-500">
               <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3">Retrieved Content</label>
               <div className="p-6 bg-blue-50/30 dark:bg-blue-900/10 rounded-3xl border border-blue-100 dark:border-blue-900/50 text-[15px] leading-relaxed text-gray-700 dark:text-gray-200 italic shadow-sm">
-                "{selectedCitation.text}"
+                &quot;{selectedCitation.text}&quot;
               </div>
             </div>
           </div>
