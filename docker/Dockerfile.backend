@@ -1,0 +1,36 @@
+FROM node:20-alpine AS base
+
+# 1. Install dependencies
+FROM base AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY apps/backend/package.json ./apps/backend/
+COPY packages/shared/package.json ./packages/shared/
+RUN npm ci
+
+# 2. Build backend
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build -w @neurovault/backend
+
+# 3. Production runner
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+
+# Only copy compiled dist files and bare minimum requirements
+COPY --from=builder /app/package.json ./package.json
+
+# tsup bundles everything, so we technically don't need all node_modules,
+# but it's safe to keep a pruned version. Since we used noExternal for shared,
+# the output is self-contained. For external express/etc., we can just copy deps.
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /app/apps/backend/package.json ./apps/backend/
+
+EXPOSE 3001
+
+CMD ["npm", "run", "start", "-w", "@neurovault/backend"]

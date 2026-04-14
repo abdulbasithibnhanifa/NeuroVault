@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - neurovault-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - REDIS_URL=redis://redis:6379
+      # Add other environment variables from .env here
+    env_file:
+      - .env
+    networks:
+      - neurovault-net
+    depends_on:
+      - redis
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    command: npm run worker -w @neurovault/backend
+    environment:
+      - REDIS_URL=redis://redis:6379
+      # Add other environment variables from .env here
+    env_file:
+      - .env
+    networks:
+      - neurovault-net
+    depends_on:
+      - redis
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SERVER_URL=http://backend:3001
+    env_file:
+      - .env
+    networks:
+      - neurovault-net
+    depends_on:
+      - backend
+
+networks:
+  neurovault-net:
+    driver: bridge

@@ -1,30 +1,28 @@
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.js
 
 # testing
-/coverage
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build/
+dist/
+standalone/
 
 # misc
 .DS_Store
 *.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+*.log
 .pnpm-debug.log*
 
 # local env files
@@ -40,5 +38,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
 # ai-usage
-/ai-usage-folder/
+ai-usage-folder/
