@@ -65,7 +65,7 @@ router.post('/note', async (req, res) => {
 });
 
 // Update Metadata
-router.post('/update', async (req, res) => {
+router.post('/update', validateObjectId('body', 'documentId'), async (req, res) => {
   try {
     const user = (req as any).user;
     const { documentId, title, tags, description } = req.body;
@@ -93,7 +93,7 @@ router.post('/update', async (req, res) => {
 });
 
 // Share Document
-router.post('/share', async (req, res) => {
+router.post('/share', validateObjectId('body', 'documentId'), async (req, res) => {
   try {
     const user = (req as any).user;
     const { documentId, targetUserEmail } = req.body;
@@ -120,7 +120,7 @@ router.post('/share', async (req, res) => {
 });
 
 // Regenerate AI Metadata
-router.post('/regenerate', async (req, res) => {
+router.post('/regenerate', validateObjectId('body', 'documentId'), async (req, res) => {
   try {
     const user = (req as any).user;
     const { documentId } = req.body;
@@ -155,7 +155,7 @@ router.post('/regenerate', async (req, res) => {
 });
 
 // Get single document
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateObjectId('params', 'id'), async (req, res) => {
 
   try {
     const user = (req as any).user;
@@ -174,7 +174,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Delete document
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validateObjectId('params', 'id'), async (req, res) => {
   try {
     const user = (req as any).user;
     await connectDB();

@@ -51,8 +51,26 @@ if (!result.success) {
 }
 
 // Build the env object by merging defaults with what we have
-// This ensures that even if one variable fails validation, others from .env.local are preserved
-export const env = {
+const rawEnv = {
   ...envSchema.parse({ NODE_ENV: 'development' }), // Start with defaults
   ...(result.success ? result.data : (process.env as any)) // Merge with actual process.env values
-} as z.infer<typeof envSchema>;
+};
+
+// Fail-fast in production for critical variables
+if (rawEnv.NODE_ENV === 'production') {
+  const criticalVars = [
+    'MONGODB_URI', 
+    'SUPABASE_URL', 
+    'SUPABASE_SERVICE_KEY', 
+    'NEXTAUTH_SECRET',
+    'S3_BUCKET'
+  ];
+  
+  const missing = criticalVars.filter(key => !rawEnv[key as keyof typeof rawEnv]);
+  if (missing.length > 0) {
+    console.error(`❌ Production failure: Missing critical environment variables: ${missing.join(', ')}`);
+    throw new Error('Missing critical environment variables');
+  }
+}
+
+export const env = rawEnv as z.infer<typeof envSchema>;

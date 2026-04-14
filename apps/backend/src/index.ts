@@ -15,11 +15,19 @@ import graphRoutes from './routes/graph';
 import youtubeRoutes from './routes/youtube';
 import userRoutes from './routes/user';
 
+import helmet from 'helmet';
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+app.use(helmet()); // Set critical security headers
+app.use(cors({
+  origin: env.NODE_ENV === 'production' 
+    ? [env.NEXTAUTH_URL, 'https://neurovault.vercel.app'] // Restrict to production origins
+    : true, // Allow all in dev for easier testing
+  credentials: true
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 
