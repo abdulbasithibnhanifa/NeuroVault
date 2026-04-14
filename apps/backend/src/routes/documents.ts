@@ -9,8 +9,8 @@ import {
   logger,
   RateLimiter
 } from '@neurovault/shared';
-// We need to import documentQueue
 import { documentQueue } from '../queues/documentQueue';
+import { validateObjectId } from '../middleware/validate';
 
 const router = Router();
 const rateLimiter = new RateLimiter();

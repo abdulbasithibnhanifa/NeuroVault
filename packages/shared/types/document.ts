@@ -21,10 +21,13 @@ export interface IDocument {
 }
 
 export interface DocumentChunk {
-  id: string;
-  documentId: string;
   chunkIndex: number;
   text: string;
+}
+
+export interface IndexedChunk extends DocumentChunk {
+  id: string;
+  documentId: string;
   metadata: {
     documentTitle: string;
     sourceURL?: string;

@@ -1,13 +1,6 @@
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { logger } from "../../utils/logger";
-
-/**
- * Interface for a text chunk
- */
-export interface DocumentChunk {
-  chunkIndex: number;
-  text: string;
-}
+import { DocumentChunk } from "../../types/document";
 
 /**
  * Service for splitting text into manageable chunks for embedding and RAG.

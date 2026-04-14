@@ -38,7 +38,7 @@ export class ModelService {
           "HTTP-Referer": "https://neurovault.local",
           "X-Title": "NeuroVault",
         },
-        next: { revalidate: 3600 } // Next.js level caching
+        cache: 'no-store'
       });
 
       if (!response.ok) {

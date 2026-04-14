@@ -36,5 +36,9 @@ export * from './utils/colors';
 // Lib Utilities (for UI)
 export * from './lib/utils';
 
-// Types
-export * from './types';
+// Types (Explicitly export to avoid collisions with Models/Services)
+export * from './types/chat';
+export * from './types/rag';
+// IDocument and DocumentChunk are defined in both Models/Services and Types.
+// We prioritize the specialized versions from Models/Services for the global API.
+export { DocumentStatus, DocumentType, UploadRequest, DocumentChunk, IndexedChunk } from './types/document';
