@@ -37,27 +37,19 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 
-// Partial parsing to allow merging values even if validation fails
+// Parse the environment variables
 const result = envSchema.safeParse(process.env);
 
-if (!result.success) {
-  if (process.env.NODE_ENV === 'production') {
-    console.error('❌ Invalid environment variables:', JSON.stringify(result.error.format(), null, 2));
-    throw new Error('Invalid environment variables');
-  } else {
-    // In dev, we log which ones are missing but DON'T crash
-    console.warn('⚠️ Environment warning: Some variables are missing or invalid.');
-  }
+if (!result.success && process.env.NODE_ENV === 'production') {
+  console.error('❌ Invalid environment variables:', JSON.stringify(result.error.format(), null, 2));
+  throw new Error('Invalid environment variables');
 }
 
-// Build the env object by merging defaults with what we have
-const rawEnv = {
-  ...envSchema.parse({ NODE_ENV: 'development' }), // Start with defaults
-  ...(result.success ? result.data : (process.env as any)) // Merge with actual process.env values
-};
+// Build the env object - use process.env directly if validation failed but let it crash in prod
+export const env = (result.success ? result.data : process.env as any) as z.infer<typeof envSchema>;
 
 // Fail-fast in production for critical variables
-if (rawEnv.NODE_ENV === 'production') {
+if (env.NODE_ENV === 'production') {
   const criticalVars = [
     'MONGODB_URI', 
     'SUPABASE_URL', 
@@ -66,11 +58,9 @@ if (rawEnv.NODE_ENV === 'production') {
     'S3_BUCKET'
   ];
   
-  const missing = criticalVars.filter(key => !rawEnv[key as keyof typeof rawEnv]);
+  const missing = criticalVars.filter(key => !(env as any)[key]);
   if (missing.length > 0) {
     console.error(`❌ Production failure: Missing critical environment variables: ${missing.join(', ')}`);
     throw new Error('Missing critical environment variables');
   }
 }
-
-export const env = rawEnv as z.infer<typeof envSchema>;

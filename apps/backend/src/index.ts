@@ -20,6 +20,14 @@ import helmet from 'helmet';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Startup Diagnostics
+logger.info(`Starting NeuroVault Backend in ${env.NODE_ENV} mode`);
+if (env.NODE_ENV === 'production') {
+  logger.info(`MONGODB_URI: ${env.MONGODB_URI ? 'LOADED' : 'MISSING'}`);
+  logger.info(`REDIS_URL: ${env.REDIS_URL ? 'LOADED' : 'MISSING'}`);
+  logger.info(`SUPABASE_URL: ${env.SUPABASE_URL ? 'LOADED' : 'MISSING'}`);
+}
+
 // Middleware
 app.use(helmet()); // Set critical security headers
 app.use(cors({

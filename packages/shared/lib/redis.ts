@@ -13,8 +13,11 @@ export function getRedisClient(): Redis {
     logger.info('Initializing Redis client...');
     const redisOptions = {
       maxRetriesPerRequest: null, // Required for BullMQ
+      connectTimeout: 10000,
+      disconnectTimeout: 2000,
+      keepAlive: 10000,
       retryStrategy: (times: number) => {
-        const delay = Math.min(times * 50, 2000);
+        const delay = Math.min(times * 100, 3000);
         return delay;
       },
     };
