@@ -58,6 +58,7 @@ app.get('/', (req, res) => {
 });
 
 // Protected Routes
+app.get('/api/health', (req, res) => res.redirect('/health'));
 app.use('/api/documents', authenticate, documentRoutes);
 app.use('/api/upload', authenticate, uploadRoutes);
 app.use('/api/chat', authenticate, chatRoutes);
