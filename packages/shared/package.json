@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "main": "index.ts",
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "build": "echo \"No build step required for shared package\""
+  },
   "dependencies": {
     "@auth/mongodb-adapter": "^2.6.0",
     "@aws-sdk/client-s3": "^3.400.0",

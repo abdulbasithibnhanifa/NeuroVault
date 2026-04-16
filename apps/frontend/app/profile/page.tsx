@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@neurovault/shared/lib/auth';
 import { redirect } from 'next/navigation';
@@ -24,9 +25,11 @@ export default async function ProfilePage() {
           <div className="px-8 pb-8">
             <div className="relative -top-12 flex items-end gap-6">
               {user?.image ? (
-                <img 
+                <Image 
                   src={user.image} 
                   alt={user.name || 'User'} 
+                  width={96}
+                  height={96}
                   className="w-24 h-24 rounded-3xl shadow-xl border-4 border-white dark:border-gray-900 object-cover"
                 />
               ) : (
