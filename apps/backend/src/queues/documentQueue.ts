@@ -8,7 +8,7 @@ export const DOCUMENT_QUEUE_NAME = 'document-processing';
  * Triggers background processing (PDF parsing, YouTube transcripts, Chunking)
  */
 export const documentQueue = new Queue(DOCUMENT_QUEUE_NAME, {
-  connection: getRedisClient() as any,
+  connection: getRedisClient('producer') as any,
   defaultJobOptions: {
     attempts: 3,
     backoff: {

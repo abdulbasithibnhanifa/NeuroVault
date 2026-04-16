@@ -207,7 +207,7 @@ export const documentWorker = new Worker(
     }
   },
   {
-    connection: getRedisClient() as any,
+    connection: getRedisClient('worker') as any,
     concurrency: 5,
   }
 );
