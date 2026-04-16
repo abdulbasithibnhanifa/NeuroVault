@@ -36,12 +36,18 @@ export function getRedisClient(): Redis {
       });
     }
 
-    redisClient.on('error', (err) => {
-      logger.error('Redis error:', err);
+    // Add exactly one listener for the first connection
+    redisClient.once('connect', () => {
+      logger.info('Redis initial connection established');
     });
 
-    redisClient.on('connect', () => {
-      logger.info('Redis connected successfully');
+    redisClient.on('error', (err: any) => {
+      // Don't spam the console if it's a common ECONNRESET/EPIPE (handled by retry)
+      if (err.code === 'ECONNRESET' || err.code === 'EPIPE') {
+        logger.debug('Redis intermittent connection error (retrying...)');
+      } else {
+        logger.error('Redis critical error:', err);
+      }
     });
   }
 

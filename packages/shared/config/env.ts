@@ -38,9 +38,10 @@ const envSchema = z.object({
 });
 
 // Parse the environment variables
+const currentEnv = process.env.NODE_ENV || 'development';
 const result = envSchema.safeParse(process.env);
 
-if (!result.success && process.env.NODE_ENV === 'production') {
+if (!result.success && currentEnv === 'production') {
   console.error('❌ Invalid environment variables:', JSON.stringify(result.error.format(), null, 2));
   throw new Error('Invalid environment variables');
 }
