@@ -1,34 +1,42 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { env } from '@neurovault/shared/config/env';
+import { env } from '../config/env';
+import { logger } from '../utils/logger';
 
-let supabaseClient: SupabaseClient | null = null;
+let supabaseInstance: SupabaseClient | null = null;
 
 /**
- * Returns a singleton Supabase client instance.
- * Configured with service role key for vector store operations.
- * Returns null gracefully if env vars are missing (e.g. during local build).
+ * Returns a Supabase client.
+ * 
+ * DESIGN RATIONALE:
+ * During Next.js static builds, environment variables are often missing.
+ * This proxy-based approach allows the client to be imported and 'touched' 
+ * during build-time without crashing, but throws a clear error if any 
+ * actual database operation is attempted at runtime without valid keys.
  */
-export function getSupabaseClient(): SupabaseClient | null {
-  if (supabaseClient) return supabaseClient;
+export const getSupabaseClient = (): SupabaseClient => {
+  if (supabaseInstance) return supabaseInstance;
 
-  const url = env.SUPABASE_URL as string;
-  const key = env.SUPABASE_SERVICE_KEY as string;
+  const { SUPABASE_URL, SUPABASE_SERVICE_KEY } = env;
 
-  if (!url || !key) {
-    // Don't crash — this happens during Next.js static build locally
-    console.warn('Supabase: URL or Service Key missing. Client not initialized.');
-    return null;
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+    // Return a proxy that throws only when methods are called
+    // This allows static analysis/builds to complete safely
+    return new Proxy({} as SupabaseClient, {
+      get: (target, prop) => {
+        throw new Error(
+          `Supabase error: SUPABASE_URL or SUPABASE_SERVICE_KEY is missing. ` +
+          `Check your environment variables for production.`
+        );
+      }
+    });
   }
 
-  supabaseClient = createClient(url, key, {
+  supabaseInstance = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
     },
-    global: {
-      fetch: globalThis.fetch,
-    },
   });
 
-  return supabaseClient;
-}
+  return supabaseInstance;
+};

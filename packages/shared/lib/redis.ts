@@ -1,60 +1,68 @@
-import Redis from 'ioredis';
-import { env } from '@neurovault/shared/config/env';
-import { logger } from '@neurovault/shared/utils/logger';
+import Redis, { RedisOptions } from 'ioredis';
+import { env } from '../config/env';
+import { logger } from '../utils/logger';
 
-// Module-level singleton — shared across all requires of this module
+/**
+ * REDIS CONFIGURATION FOR PRODUCTION (Upstash/Cloud)
+ */
+const REDIS_OPTIONS: RedisOptions = {
+  maxRetriesPerRequest: null, // Required for BullMQ compatibility
+  enableReadyCheck: true,
+  connectTimeout: 10000,
+  // Upstash/Cloud environments often have aggressive idle timeouts (~30-60s).
+  // Lowering keepAlive to 5s helps maintain the connection.
+  keepAlive: 5000, 
+  retryStrategy(times) {
+    const delay = Math.min(times * 200, 5000);
+    // Be very persistent during the first 20 attempts to handle intermittent cloud blips
+    if (times < 20) {
+      return delay;
+    }
+    logger.error(`Redis: Max retries reached (${times}). Giving up.`);
+    return null;
+  },
+  reconnectOnError(err) {
+    const targetErrors = ['READONLY', 'ECONNRESET', 'EPIPE'];
+    if (targetErrors.some(te => err.message.includes(te))) {
+      return true; // Force reconnect
+    }
+    return false;
+  }
+};
+
 let redisClient: Redis | null = null;
 
 /**
  * Returns a singleton Redis client instance.
  * Used for BullMQ queues, caching, and rate limiting.
- * The module-level variable ensures only ONE client is ever created,
- * preventing the connection explosion during startup.
  */
-export function getRedisClient(): Redis {
+export const getRedisClient = (): Redis => {
   if (redisClient) return redisClient;
 
-  const redisOptions = {
-    maxRetriesPerRequest: null, // Required for BullMQ
-    connectTimeout: 10000,
-    keepAlive: 30000,
-    lazyConnect: false,
-    retryStrategy: (times: number) => {
-      // Stop retrying after 10 failed attempts to avoid runaway reconnections
-      if (times > 10) {
-        logger.error('Redis: Max retries reached. Giving up.');
-        return null;
-      }
-      return Math.min(times * 200, 5000);
-    },
-  };
-
-  if (env.REDIS_URL) {
-    const isTLS = env.REDIS_URL.startsWith('rediss://');
-    redisClient = new Redis(env.REDIS_URL, {
-      ...redisOptions,
-      ...(isTLS ? { tls: { rejectUnauthorized: false } } : {})
-    });
-  } else {
-    redisClient = new Redis({
-      host: env.REDIS_HOST || 'localhost',
-      port: env.REDIS_PORT || 6379,
-      ...redisOptions
-    });
+  const url = env.REDIS_URL;
+  if (!url) {
+    throw new Error('REDIS_URL is not defined in environment variables');
   }
 
-  // Only log the FIRST successful connection, never reconnections
-  redisClient.once('ready', () => {
-    logger.info('Redis connection ready');
+  // Use the validated URL from env
+  const isTLS = url.startsWith('rediss://');
+  redisClient = new Redis(url, {
+    ...REDIS_OPTIONS,
+    ...(isTLS ? { tls: { rejectUnauthorized: false } } : {})
   });
 
-  // Silently suppress intermittent cloud connectivity errors (ECONNRESET/EPIPE)
-  // These are handled automatically by the retryStrategy above
-  redisClient.on('error', (err: any) => {
-    if (err.code !== 'ECONNRESET' && err.code !== 'EPIPE') {
-      logger.error(`Redis critical error [${err.code}]: ${err.message}`);
+  // Suppress unhandled ECONNRESET/EPIPE logs from the driver itself
+  redisClient.on('error', (err) => {
+    if (['ECONNRESET', 'EPIPE'].some(code => err.message?.includes(code))) {
+      logger.debug(`Redis intermittent connection error (handled): ${err.message}`);
+    } else {
+      logger.error('Redis connection error:', err);
     }
   });
 
+  redisClient.once('ready', () => {
+    logger.info('Redis connection established and ready');
+  });
+
   return redisClient;
-}
+};
