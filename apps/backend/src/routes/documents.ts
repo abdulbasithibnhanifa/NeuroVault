@@ -36,6 +36,10 @@ router.post('/note', async (req, res) => {
     const user = (req as any).user;
     const { title, content, tags } = req.body;
 
+    // Security Check: Rate Limit Note Creation
+    const isAllowed = await rateLimiter.checkLimit(user.id, 'create_note', 10);
+    if (!isAllowed) return res.status(429).json({ error: 'Too many notes. Please wait a minute.' });
+
     if (!content) {
       return res.status(400).json({ error: 'Content is required' });
     }
@@ -57,6 +61,7 @@ router.post('/note', async (req, res) => {
       type: 'note',
     });
 
+    logger.info(`Note created: ${document._id}`, { userId: user.id });
     return res.status(201).json({ success: true, documentId: document._id });
   } catch (error) {
     logger.error('Failed to create note', error);
@@ -70,11 +75,16 @@ router.post('/update', validateObjectId('body', 'documentId'), async (req, res) 
     const user = (req as any).user;
     const { documentId, title, tags, description } = req.body;
 
+    // Security Check: Rate Limit Updates
+    const isAllowed = await rateLimiter.checkLimit(user.id, 'update_doc', 20);
+    if (!isAllowed) return res.status(429).json({ error: 'Too many updates. Please wait.' });
+
     if (!documentId) {
       return res.status(400).json({ error: 'Document ID is required' });
     }
 
     await connectDB();
+    // Security: Enforce userId to prevent IDOR
     const document = await DocumentModel.findOne({ _id: documentId, userId: user.id });
 
     if (!document) {
@@ -86,8 +96,10 @@ router.post('/update', validateObjectId('body', 'documentId'), async (req, res) 
     if (description !== undefined) document.description = description;
 
     await document.save();
+    logger.info(`Document metadata updated: ${documentId}`, { userId: user.id });
     return res.status(200).json({ success: true, message: 'Updated successfully' });
   } catch (error) {
+    logger.error('Update failed', error);
     return res.status(500).json({ error: 'Update failed' });
   }
 });
@@ -98,10 +110,15 @@ router.post('/share', validateObjectId('body', 'documentId'), async (req, res) =
     const user = (req as any).user;
     const { documentId, targetUserEmail } = req.body;
 
+    // Security Check: Rate Limit Sharing
+    const isAllowed = await rateLimiter.checkLimit(user.id, 'share_doc', 10);
+    if (!isAllowed) return res.status(429).json({ error: 'Too many share requests.' });
+
     await connectDB();
     const targetUser = await User.findOne({ email: targetUserEmail?.toLowerCase() });
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
+    // Security: Enforce userId
     const document = await DocumentModel.findOne({ _id: documentId, userId: user.id });
     if (!document) return res.status(403).json({ error: 'Access denied' });
 
@@ -111,10 +128,12 @@ router.post('/share', validateObjectId('body', 'documentId'), async (req, res) =
     if (!document.sharedWith.includes(targetUserId)) {
       document.sharedWith.push(targetUserId);
       await document.save();
+      logger.info(`Document shared: ${documentId}`, { from: user.id, to: targetUserId });
     }
 
     return res.status(200).json({ success: true });
   } catch (error) {
+    logger.error('Share failed', error);
     return res.status(500).json({ error: 'Share failed' });
   }
 });
@@ -125,9 +144,14 @@ router.post('/regenerate', validateObjectId('body', 'documentId'), async (req, r
     const user = (req as any).user;
     const { documentId } = req.body;
 
+    // Security Check: Rate Limit AI Tasks (Expensive)
+    const isAllowed = await rateLimiter.checkLimit(user.id, 'regenerate_ai', 5);
+    if (!isAllowed) return res.status(429).json({ error: 'AI limit reached. Please wait.' });
+
     await connectDB();
-    const document = await DocumentModel.findById(documentId);
-    if (!document || document.userId.toString() !== user.id) {
+    // Security: Enforce userId
+    const document = await DocumentModel.findOne({ _id: documentId, userId: user.id });
+    if (!document) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -148,8 +172,10 @@ router.post('/regenerate', validateObjectId('body', 'documentId'), async (req, r
       description: analysis.summary || document.description
     }, { new: true });
 
+    logger.info(`AI Metadata regenerated for: ${documentId}`, { userId: user.id });
     return res.status(200).json({ success: true, suggestedTags: analysis.tags, description: updatedDoc?.description });
   } catch (error) {
+    logger.error('Regeneration failed', error);
     return res.status(500).json({ error: 'Regeneration failed' });
   }
 });
@@ -177,13 +203,20 @@ router.get('/:id', validateObjectId('params', 'id'), async (req, res) => {
 router.delete('/:id', validateObjectId('params', 'id'), async (req, res) => {
   try {
     const user = (req as any).user;
+
+    // Security Check: Rate Limit Deletions
+    const isAllowed = await rateLimiter.checkLimit(user.id, 'delete_doc', 10);
+    if (!isAllowed) return res.status(429).json({ error: 'Too many deletions.' });
+
     await connectDB();
+    // Security: Enforce userId
     const result = await DocumentModel.deleteOne({ _id: req.params.id, userId: user.id });
     
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: 'Document not found' });
     }
     
+    logger.warn(`Document deleted: ${req.params.id}`, { userId: user.id });
     return res.status(200).json({ success: true });
   } catch (error) {
     logger.error('Error deleting document:', error);

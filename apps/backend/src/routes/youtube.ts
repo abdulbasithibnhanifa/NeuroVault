@@ -39,8 +39,10 @@ router.post('/', async (req, res) => {
       userId: user.id,
     });
 
+    logger.info(`YouTube ingestion started: ${document._id}`, { userId: user.id, url });
     return res.status(202).json({ message: 'Processing started', documentId: document._id });
   } catch (error) {
+    logger.error('YouTube ingestion failed', error);
     return res.status(500).json({ error: 'YouTube ingestion failed' });
   }
 });

@@ -72,7 +72,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       jobId: document._id.toString(),
     });
 
-    logger.info(`Document uploaded via Backend: ${document._id}`);
+    logger.info(`Document uploaded via Backend: ${document._id}`, { userId });
 
     return res.status(201).json({
       success: true,

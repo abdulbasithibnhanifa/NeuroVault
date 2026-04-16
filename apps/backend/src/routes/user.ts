@@ -56,17 +56,34 @@ router.get('/settings', async (req, res) => {
 router.post('/settings', async (req, res) => {
   try {
     const userAuth = (req as any).user;
-    const settings = req.body;
+    
+    // Security Check: Rate Limit Settings Updates
+    const isAllowed = await rateLimiter.checkLimit(userAuth.id, 'user_settings', 10);
+    if (!isAllowed) return res.status(429).json({ error: 'Too many updates. Please wait.' });
+
+    const { strictMode, defaultModel, similarityThreshold } = req.body;
+    
+    // Security: Whitelist allowed settings
+    const cleanSettings: any = {};
+    if (typeof strictMode === 'boolean') cleanSettings.strictMode = strictMode;
+    if (typeof defaultModel === 'string') cleanSettings.defaultModel = defaultModel;
+    if (typeof similarityThreshold === 'number') cleanSettings.similarityThreshold = similarityThreshold;
+
+    if (Object.keys(cleanSettings).length === 0) {
+      return res.status(400).json({ error: 'No valid settings provided' });
+    }
 
     await connectDB();
     const user = await User.findByIdAndUpdate(
       userAuth.id,
-      { settings },
+      { $set: { settings: cleanSettings } },
       { new: true, upsert: true }
     );
 
+    logger.info(`User settings updated: ${userAuth.id}`);
     return res.json(user.settings);
   } catch (error) {
+    logger.error('Failed to update settings', error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });

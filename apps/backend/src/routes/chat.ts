@@ -136,7 +136,7 @@ router.post('/', async (req, res) => {
     res.end();
 
   } catch (error: any) {
-    logger.error('Chat API Fatal Error', error);
+    logger.error('Chat API Fatal Error', { error: error.message, stack: error.stack });
     if (!res.headersSent) {
       res.status(500).json({ error: "Failed to process message" });
     } else {

@@ -1,9 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import { env, connectDB, getSupabaseClient } from '@neurovault/shared';
+import { env, connectDB, getSupabaseClient, logger } from '@neurovault/shared';
 import { authenticate } from './middleware/auth';
-import { logger } from '@neurovault/shared';
 
 // Import Routes
 import documentRoutes from './routes/documents';
@@ -33,9 +32,9 @@ app.use(helmet()); // Set critical security headers
 app.use(cors({
   origin: env.NODE_ENV === 'production'
     ? [
-        process.env.FRONTEND_URL,      // Set this to your Vercel URL in Render dashboard
-        'https://neurovault.vercel.app' // Fallback default
-      ].filter(Boolean)
+        env.FRONTEND_URL,
+        'https://neurovault.vercel.app' 
+      ].filter((url): url is string => Boolean(url))
     : true, // Allow all origins in dev
   credentials: true
 }));

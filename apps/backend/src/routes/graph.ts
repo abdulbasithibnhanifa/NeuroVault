@@ -49,6 +49,7 @@ router.get('/', async (req, res) => {
 
     return res.status(200).json({ nodes, links });
   } catch (error) {
+    logger.error('Graph API Error', error);
     return res.status(500).json({ error: 'Graph failed' });
   }
 });
