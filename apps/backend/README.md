@@ -17,8 +17,8 @@ The Backend of NeuroVault is a robust, high-performance Node.js environment resp
 - **Similarity Search**: Native integration with **Supabase pgvector** for high-speed cosine similarity search.
 - **AI Processing**: Orchestrates 3-5 automated topic tags and 3-sentence summaries for every document using LLMs.
 
-### 📊 Observability: Unified Logging
-- **Structured JSON Logs**: Uses **Winston** for production-grade logging.
+### 📊 Observability: Structured Logging
+- **Structured JSON Logs**: Uses a centralized logging wrapper to produce machine-readable JSON logs for production-grade observability.
 - **Context-Aware Tracing**: Every error is logged with associated document IDs and job metadata for rapid incident resolution.
 
 ---
@@ -29,7 +29,7 @@ The Backend of NeuroVault is a robust, high-performance Node.js environment resp
 - **Orchestration**: BullMQ + Redis (Upstash)
 - **State/Auth**: NextAuth + `jose` (JWT)
 - **Database**: MongoDB (Metadata) + Supabase pgvector (Vector Store)
-- **Logging**: Winston
+- **Logging**: Custom Structured JSON Logger
 
 ---
 

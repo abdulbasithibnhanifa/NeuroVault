@@ -24,7 +24,7 @@ graph TD
     subgraph "Backend Layer (Render)"
         Express["Express.js API"]
         Worker["BullMQ Worker (Document Processor)"]
-        Logger["Unified Winston Logger"]
+        Logger["Structured JSON Logging"]
     end
     
     subgraph "Storage & Intelligence"

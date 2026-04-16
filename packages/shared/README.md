@@ -9,12 +9,12 @@ The `packages/shared` workspace is the "source of truth" for the entire NeuroVau
 - **Type-Driven Contract**: High-fidelity TypeScript interfaces that define the strict contract between the API and the UI.
 
 ### 🧩 Infrastructure Adapters
-- **Redis Resilience**: Hardened singleton client with custom `retryStrategy` and `keepAlive` settings optimized for Upstash/Cloud environments (handles `ECONNRESET` silently).
+- **Redis Resilience**: High-performance **role-based client factory** with dedicated instances for `default` (app/rate-limiting), `producer` (queueing), and `worker` (blocking tasks). Features hardened `idle-reconnect` logic optimized for Upstash/Cloud environments.
 - **Intelligence Adapters**: Modular **OpenRouter** and **HuggingFace** service layers for seamless AI orchestration and usage tracking.
 - **Supabase Vector Store**: Encapsulated logic for semantic indexing and retrieval using `pgvector`.
 
 ### 📊 Observability & Validation
-- **Unified Logging**: Centralized **Winston** logger configuration used by both the API server and the background workers for consistent traceability.
+- **Structured JSON Logging**: Centralized logging configuration used by both the API server and the background workers for consistent traceability.
 - **Environment Safety**: Zod-powered validation ensures that missing configuration keys are caught at startup, not at runtime.
 
 ---
@@ -25,7 +25,7 @@ The `packages/shared` workspace is the "source of truth" for the entire NeuroVau
 - **ORM/ODM**: Mongoose
 - **Validation**: Zod
 - **Infrastructure**: AWS SDK, Supabase JS, ioredis (BullMQ optimized)
-- **Logging**: Winston
+- **Logging**: Custom Structured JSON Logger
 
 ---
 
