@@ -16,11 +16,11 @@ export const authOptions: NextAuthOptions = {
   // Only use the adapter if MongoDB is configured
   ...(env.MONGODB_URI ? { adapter: MongoDBAdapter(clientPromise) as any } : {}),
   providers: [
-    CredentialsProvider({
+    // Developer Login is DISABLED in production for security
+    ...(env.NODE_ENV !== 'production' ? [CredentialsProvider({
       name: 'Developer Login',
       credentials: {},
-      async authorize(credentials) {
-        // Mock developer user - using a valid-looking 24-char hex ID for MongoDB compatibility
+      async authorize() {
         return {
           id: '507f1f77bcf86cd799439011', 
           name: 'Developer Mode',
@@ -28,7 +28,7 @@ export const authOptions: NextAuthOptions = {
           image: 'https://ui-avatars.com/api/?name=Dev+User&background=0D8ABC&color=fff',
         };
       },
-    }),
+    })] : []),
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID || 'missing',
       clientSecret: env.GOOGLE_CLIENT_SECRET || 'missing',
@@ -59,7 +59,9 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
   // Ensure the secret is never truly empty, as NextAuth requires it
-  secret: env.NEXTAUTH_SECRET || 'fallback_secret_for_dev_mode_only',
+  secret: env.NODE_ENV === 'production'
+    ? env.NEXTAUTH_SECRET  // Must be set in production — will throw if missing
+    : (env.NEXTAUTH_SECRET || 'fallback_secret_for_dev_mode_only'),
   debug: process.env.NODE_ENV === 'development',
 };
 

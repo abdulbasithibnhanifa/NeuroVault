@@ -31,24 +31,28 @@ if (env.NODE_ENV === 'production') {
 // Middleware
 app.use(helmet()); // Set critical security headers
 app.use(cors({
-  origin: env.NODE_ENV === 'production' 
-    ? [env.NEXTAUTH_URL, 'https://neurovault.vercel.app'] // Restrict to production origins
-    : true, // Allow all in dev for easier testing
+  origin: env.NODE_ENV === 'production'
+    ? [
+        process.env.FRONTEND_URL,      // Set this to your Vercel URL in Render dashboard
+        'https://neurovault.vercel.app' // Fallback default
+      ].filter(Boolean)
+    : true, // Allow all origins in dev
   credentials: true
 }));
-app.use(express.json());
-app.use(morgan('dev'));
+app.use(express.json({ limit: '10mb' }));
+app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Health check for Render & Supabase
 app.get('/health', async (req, res) => {
   try {
     const supabase = getSupabaseClient();
-    // A tiny metadata-only query to Supabase to keep it active
-    await supabase.from('documents').select('id', { count: 'exact', head: true }).limit(1);
-    
+    if (supabase) {
+      // A tiny metadata-only query to keep Supabase active
+      await supabase.from('documents').select('id', { count: 'exact', head: true }).limit(1);
+    }
     res.status(200).json({ 
       status: 'healthy', 
-      supabase: 'active',
+      supabase: supabase ? 'active' : 'not_configured',
       timestamp: new Date().toISOString() 
     });
   } catch (err) {

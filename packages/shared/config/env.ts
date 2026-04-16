@@ -35,6 +35,9 @@ const envSchema = z.object({
   
   // Node Env
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+
+  // Frontend URL (set in Render dashboard after deploying to Vercel)
+  FRONTEND_URL: z.string().url().optional(),
 });
 
 // Parse the environment variables
@@ -49,16 +52,21 @@ if (!result.success && currentEnv === 'production') {
 // Build the env object - use process.env directly if validation failed but let it crash in prod
 export const env = (result.success ? result.data : process.env as any) as z.infer<typeof envSchema>;
 
-// Fail-fast in production for critical variables
-if (env.NODE_ENV === 'production') {
+// Fail-fast in production for critical variables.
+// We skip this check during Next.js static build (NEXT_PHASE=phase-production-build)
+// because env vars are not available at build time — only at runtime on the server.
+const isNextBuild = process.env.NEXT_PHASE === 'phase-production-build';
+
+if (env.NODE_ENV === 'production' && !isNextBuild) {
   const criticalVars = [
-    'MONGODB_URI', 
-    'SUPABASE_URL', 
-    'SUPABASE_SERVICE_KEY', 
+    'MONGODB_URI',
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_KEY',
     'NEXTAUTH_SECRET',
-    'S3_BUCKET'
+    'S3_BUCKET',
+    'REDIS_URL',      // Must use cloud Redis in production
   ];
-  
+
   const missing = criticalVars.filter(key => !(env as any)[key]);
   if (missing.length > 0) {
     console.error(`❌ Production failure: Missing critical environment variables: ${missing.join(', ')}`);
