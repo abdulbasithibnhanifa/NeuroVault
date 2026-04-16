@@ -30,16 +30,24 @@ const getOptionsByRole = (role: 'default' | 'producer' | 'worker'): RedisOptions
 };
 
 /**
+ * HELPER: IDENTIFY IDLE ERRORS
+ * Detects common cloud idle-timeout errors (ECONNRESET, EPIPE, ETIMEDOUT).
+ */
+export const isRedisIdleError = (err: any): boolean => {
+  const message = err?.message || '';
+  const code = err?.code || '';
+  return ['ECONNRESET', 'EPIPE', 'ETIMEDOUT'].some(c => 
+    message.includes(c) || code === c
+  );
+};
+
+/**
  * HARDENED ERROR HANDLER
  * Traces and suppresses raw ECONNRESET noise while preserving real failure visibility.
  */
 const attachHardenedListeners = (client: Redis, role: string) => {
   client.on('error', (err) => {
-    const isIdleReset = ['ECONNRESET', 'EPIPE', 'ETIMEDOUT'].some(code => 
-      err.message?.includes(code) || (err as any).code === code
-    );
-
-    if (isIdleReset) {
+    if (isRedisIdleError(err)) {
       // PROMPT: "Avoid passing the raw error object to the logger for these specific codes"
       // This prevents the logger from dumping the stack trace to the console output.
       logger.debug(`Redis [${role}] idle connection reset (handled): ${err.message}`);

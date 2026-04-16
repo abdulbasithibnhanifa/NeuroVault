@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { jwtVerify } from 'jose';
-import { env } from '@neurovault/shared';
+import { env, logger } from '@neurovault/shared';
 
 /**
  * Middleware to verify NextAuth JWT tokens

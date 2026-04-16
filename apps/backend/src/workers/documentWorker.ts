@@ -14,7 +14,8 @@ import {
   VectorStoreService, 
   TaggingService, 
   YoutubeProcessor, 
-  logger 
+  logger,
+  isRedisIdleError 
 } from '@neurovault/shared';
 import { DOCUMENT_QUEUE_NAME } from '../queues/documentQueue';
 
@@ -218,4 +219,13 @@ documentWorker.on('completed', (job) => {
 
 documentWorker.on('failed', (job, err) => {
   logger.error(`Job ${job?.id} failed:`, err);
+});
+
+// Handle Worker-level connection/internal errors to prevent raw stack trace leakage
+documentWorker.on('error', (err) => {
+  if (isRedisIdleError(err)) {
+    logger.debug(`Worker [document-processing] connection reset (handled): ${err.message}`);
+  } else {
+    logger.error('Worker [document-processing] error:', err);
+  }
 });
