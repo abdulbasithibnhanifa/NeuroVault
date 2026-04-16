@@ -24,6 +24,7 @@ const chunkingService = new ChunkingService();
 const embeddingService = new EmbeddingService();
 const vectorStoreService = new VectorStoreService();
 const taggingService = new TaggingService();
+const youtubeProcessor = new YoutubeProcessor(); // Moved outside for efficiency
 
 /**
  * Sanitize text for AI analysis by removing excessive whitespace and non-printable characters.
@@ -75,8 +76,7 @@ export const documentWorker = new Worker(
           const doc = await DocumentModel.findById(documentId);
           if (doc && (doc.title === 'YouTube Video' || !doc.title)) {
             logger.info(`START: Auto-fetching title for YouTube video: ${youtubeUrl}`);
-            const ytProcessor = new YoutubeProcessor();
-            const fetchedTitle = await ytProcessor.getVideoTitle(youtubeUrl);
+            const fetchedTitle = await youtubeProcessor.getVideoTitle(youtubeUrl);
             
             if (fetchedTitle) {
               await DocumentModel.findByIdAndUpdate(documentId, { title: fetchedTitle });
@@ -150,9 +150,9 @@ export const documentWorker = new Worker(
         embeddings
       );
 
-      // 7. Update document status to indexed
+      // 7. Update document status to processed
       const finalUpdate: any = { 
-        status: text ? 'indexed' : 'analyzed',
+        status: text ? 'processed' : 'analyzed',
         chunkCount: chunks.length
       };
 

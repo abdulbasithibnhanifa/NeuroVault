@@ -1,6 +1,7 @@
 import { logger } from "@neurovault/shared/utils/logger";
 import { connectDB } from "@neurovault/shared/lib/mongodb";
 import { Usage } from "@neurovault/shared/models/Usage";
+import { env } from "@neurovault/shared/config/env";
 
 /**
  * Service for automatically generating topic tags and summaries for documents using AI.
@@ -9,7 +10,7 @@ export class TaggingService {
   private openRouterKey: string | undefined;
 
   constructor() {
-    this.openRouterKey = process.env.OPENROUTER_API_KEY;
+    this.openRouterKey = env.OPENROUTER_API_KEY;
   }
 
   /**

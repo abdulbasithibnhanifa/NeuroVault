@@ -6,49 +6,50 @@ The Backend of NeuroVault is a robust, high-performance Node.js environment resp
 
 ### 🔄 Asynchronous Worker Loop (BullMQ)
 - **Background Processing**: Heavy tasks like PDF text extraction, YouTube transcript fetching, and Vector indexing are delegated to an isolated worker process.
-- **Reliability**: Integrated **Redis** as a job broker to ensure zero data loss during network or processing spikes.
+- **Redis Resilience**: Integrated **Upstash Redis** as a job broker with custom logic to handle cloud-provider idle timeouts (`ECONNRESET`) through automated reconnection.
 - **Scalability**: Decoupled worker architecture allows infrastructure to scale the pool of processing workers independently of the API server.
 
-### 🧠 Intelligent Retrieval & Search
-- **Similarity Search Implementation**: Native integration with **Supabase pgvector** for cosine similarity search.
-- **Semantic Indexing**: Seamless orchestration between S3 storage, HuggingFace embeddings, and the vector store.
-- **Metadata Management**: Optimized MongoDB schema designs for high-speed retrieval of document relationship graphs.
+### 🔐 JWT Auth Bridge
+- **Secure Communication**: Implements a zero-trust middleware using `jose` to verify NextAuth JWT tokens between the decoupled frontend (Vercel) and backend (Render).
+- **Session Continuity**: Ensures seamless user identification across different cloud provider domains.
 
-### 📦 Modern Node.js Tooling
-- **tsup Bundling**: Used to package the entire backend into a single self-contained execution unit for production, reducing Docker startup overhead.
-- **Type Safety**: strict TypeScript configuration for end-to-end reliability.
-- **Logging & Monitoring**: Structured JSON logging for production observability.
+### 🧠 Intelligent Retrieval & Search
+- **Similarity Search**: Native integration with **Supabase pgvector** for high-speed cosine similarity search.
+- **AI Processing**: Orchestrates 3-5 automated topic tags and 3-sentence summaries for every document using LLMs.
+
+### 📊 Observability: Unified Logging
+- **Structured JSON Logs**: Uses **Winston** for production-grade logging.
+- **Context-Aware Tracing**: Every error is logged with associated document IDs and job metadata for rapid incident resolution.
 
 ---
 
 ## 🛠 Tech Stack
 
 - **Framework**: Express.js
-- **Orchestration**: BullMQ + Upstash Redis
-- **Bundler**: tsup
-- **Storage**: AWS S3 + MongoDB + Supabase
-- **Security**: jose (JWT verification), Multer (Input constraints)
+- **Orchestration**: BullMQ + Redis (Upstash)
+- **State/Auth**: NextAuth + `jose` (JWT)
+- **Database**: MongoDB (Metadata) + Supabase pgvector (Vector Store)
+- **Logging**: Winston
 
 ---
 
 ## 📥 Development & Execution
 
-1. Root Directory: `npm run dev` starts the API on port 3001.
-2. Worker Deployment: The background processing loop is executed via:
+1. Root Directory: `npm run dev` starts the API, Worker, and Frontend.
+2. Independent Worker: To scale the processing layer:
    ```bash
    npm run worker -w @neurovault/backend
    ```
 
 ## 📦 Production Deployment
-The backend is bundled into `dist/` before deployment:
+The backend is bundled into `dist/` using `tsup` for a minimal, high-performance runtime:
 ```bash
 npm run build -w @neurovault/backend
 ```
 
 ---
 
-## 👨+💻 Backend Engineering Skills Demonstrated
-- Large-scale job queue architecture.
-- Complex database orchestration (SQL-as-Vector + NoSQL).
-- Production-grade bundling and Docker optimization.
-- Robust error handling and logging standards.
+## 👨‍💻 Backend Engineering Standards
+- **Middleware Validation**: Strict MongoDB ObjectId validation on all incoming resource identifiers.
+- **Resource Constraints**: Rigid Multer and payload limits to prevent memory exhaustion.
+- **Standardized Errors**: High-quality HTTP status codes and detailed error payloads.

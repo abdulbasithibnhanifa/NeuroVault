@@ -29,8 +29,12 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     };
 
     next();
-  } catch (error) {
-    console.error('Auth Middleware Error:', error);
+  } catch (error: any) {
+    logger.error('Auth Middleware Error:', { 
+      message: error.message, 
+      path: req.path,
+      hasToken: !!req.headers.authorization || !!req.cookies?.['next-auth.session-token']
+    });
     return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
   }
 }

@@ -5,17 +5,17 @@ The `packages/shared` workspace is the "source of truth" for the entire NeuroVau
 ## 🚀 Key Engineering Highlights
 
 ### 🏛 Domain-Driven Design
-- **Unified Models**: Centralized Mongoose schemas for `Document`, `User`, `Chat`, and `Usage` ensures data consistency across the stack.
-- **Type-Driven Development**: High-fidelity TypeScript interfaces that define the contract between the API and the UI.
+- **Unified Models**: Centralized Mongoose schemas for `Document`, `User`, `Chat`, and `Usage` ensure data consistency across the entire stack.
+- **Type-Driven Contract**: High-fidelity TypeScript interfaces that define the strict contract between the API and the UI.
 
 ### 🧩 Infrastructure Adapters
-- **Storage Strategy**: Abstracted **S3** and **Supabase** services that allow for easy swapping of underlying cloud providers.
-- **Intelligence Adapters**: Decoupled **HuggingFace** and **OpenRouter** service layers for modular LLM orchestration.
-- **Database Library**: Centralized connection management with refined retry logic and connection pooling.
+- **Redis Resilience**: Hardened singleton client with custom `retryStrategy` and `keepAlive` settings optimized for Upstash/Cloud environments (handles `ECONNRESET` silently).
+- **Intelligence Adapters**: Modular **OpenRouter** and **HuggingFace** service layers for seamless AI orchestration and usage tracking.
+- **Supabase Vector Store**: Encapsulated logic for semantic indexing and retrieval using `pgvector`.
 
-### 🛡️ Common Utilities
-- **Rate Limiting**: Custom implementation of token-bucket rate limiting to protect the AI pipeline.
-- **Structured Logging**: Standardized pino-based logger used throughout the monorepo for production-grade traceability.
+### 📊 Observability & Validation
+- **Unified Logging**: Centralized **Winston** logger configuration used by both the API server and the background workers for consistent traceability.
+- **Environment Safety**: Zod-powered validation ensures that missing configuration keys are caught at startup, not at runtime.
 
 ---
 
@@ -23,13 +23,18 @@ The `packages/shared` workspace is the "source of truth" for the entire NeuroVau
 
 - **Language**: TypeScript (v5+)
 - **ORM/ODM**: Mongoose
-- **Validation**: Zod (Environment variables and payload validation)
-- **Infrastructure**: AWS SDK, Supabase JS, Redis (BullMQ types)
+- **Validation**: Zod
+- **Infrastructure**: AWS SDK, Supabase JS, ioredis (BullMQ optimized)
+- **Logging**: Winston
 
 ---
 
-## 🏗 Why This Matters (For Recruiters)
+## 🏗 Architecture Benefit
 This package demonstrates an advanced understanding of **Software Design Patterns**:
-- **DRY (Don't Repeat Yourself)**: Zero code duplication across the mono-repo.
-- **Separation of Concerns**: Infrastructure logic is decoupled from application logic.
+- **DRY (Don't Repeat Yourself)**: Zero code duplication for core logic across the mono-repo.
+- **Separation of Concerns**: Infrastructure logic is decoupled from application logic, allowing for modular cloud provider swapping.
 - **Maintainability**: Centralized updates to a schema or an API adapter automatically propagate to both the client and the worker.
+
+---
+
+*Ensuring architectural integrity across the NeuroVault ecosystem.*

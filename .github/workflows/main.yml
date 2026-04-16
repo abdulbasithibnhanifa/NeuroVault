@@ -38,10 +38,12 @@ jobs:
         
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
+        working-directory: apps/frontend
         
       - name: Run E2E Tests
-        run: npx playwright test
+        run: npx playwright test --config=apps/frontend/playwright.config.ts
         env:
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
           MONGODB_URI: mongodb://localhost:27017/test
           REDIS_HOST: localhost
           REDIS_PORT: 6379
