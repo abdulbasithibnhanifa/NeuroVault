@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import { env, connectDB } from '@neurovault/shared';
+import { env, connectDB, getSupabaseClient } from '@neurovault/shared';
 import { authenticate } from './middleware/auth';
 import { logger } from '@neurovault/shared';
 
@@ -31,9 +31,25 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Health check for Render
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+// Health check for Render & Supabase
+app.get('/health', async (req, res) => {
+  try {
+    const supabase = getSupabaseClient();
+    // A tiny metadata-only query to Supabase to keep it active
+    await supabase.from('documents').select('id', { count: 'exact', head: true }).limit(1);
+    
+    res.status(200).json({ 
+      status: 'healthy', 
+      supabase: 'active',
+      timestamp: new Date().toISOString() 
+    });
+  } catch (err) {
+    res.status(200).json({ 
+      status: 'healthy', 
+      supabase: 'unreachable',
+      timestamp: new Date().toISOString() 
+    });
+  }
 });
 
 // Root

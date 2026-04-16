@@ -6,6 +6,7 @@ export * from './config/env';
 // Database
 export * from './lib/mongodb';
 export * from './lib/redis';
+export * from './lib/supabase';
 
 // Models
 export * from './models/Document';
