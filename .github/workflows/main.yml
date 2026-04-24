@@ -1,16 +1,13 @@
 name: NeuroVault CI
-
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, fix/backend-lint-and-redis-errors ]
   pull_request:
     branches: [ main ]
-
 jobs:
   test:
     name: Run Tests & Lint
     runs-on: ubuntu-latest
-
     services:
       mongodb:
         image: mongo:6.0
@@ -20,7 +17,6 @@ jobs:
         image: redis:7.0
         ports:
           - 6379:6379
-
     steps:
       - uses: actions/checkout@v3
       
